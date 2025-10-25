@@ -166,7 +166,7 @@ class MyRegisterState extends State<MyRegister> {
             ),
           ),
         ],
-      ),
-    );
-  }
+      ),
+    );
+  }
 }

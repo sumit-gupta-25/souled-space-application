@@ -169,7 +169,7 @@ class MyHomeState extends State<MyHome> {
             ],
           ),
         ),
-      ),
-    );
-  }
+      ),
+    );
+  }
 }
