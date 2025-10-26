@@ -99,7 +99,7 @@ class UiTemplate extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.exit_to_app),
             onPressed: () {
-              Navigator.pushNamed(context, 'individual');
+              Navigator.of(context).pop();
             },
           ),
         ],
