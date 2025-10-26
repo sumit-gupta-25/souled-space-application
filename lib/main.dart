@@ -3,6 +3,7 @@ import 'package:souled_space_application/home.dart';
 import 'package:souled_space_application/login.dart';
 import 'package:souled_space_application/register.dart';
 import 'package:souled_space_application/group/group_home.dart';
+import 'package:souled_space_application/group/group_page.dart';
 import 'package:souled_space_application/individual/anonymous_venting_wall.dart';
 import 'package:souled_space_application/individual/stress_thermometer.dart';
 import 'package:souled_space_application/individual/indi_home.dart';

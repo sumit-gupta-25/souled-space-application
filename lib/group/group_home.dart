@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:souled_space_application/group/group_page.dart';
 import 'package:souled_space_application/ui_blueprint.dart';
 
 class GroupHome extends StatefulWidget {
@@ -56,31 +57,17 @@ class _GroupHomeState extends State<GroupHome> {
   @override
   Widget build(BuildContext context) {
     return UiTemplate(
-      title: 'Souled Space', // AppBar title changed
+      title: 'Souled Space', // AppBar title
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Column(
           children: [
-            // // Heading "Groups"
-            // Align(
-            //   alignment: Alignment.centerLeft,
-            //   child: Text(
-            //     'Groups',
-            //     style: TextStyle(
-            //       fontSize: 24,
-            //       fontWeight: FontWeight.bold,
-            //       color: Colors.brown,
-            //     ),
-            //   ),
-            // ),
-            // const SizedBox(height: 20),
-
-            // Top icons row (Create + Invitations/Join)
+            // Top row (Groups + icons)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Left side: Groups text
-                Text(
+                const Text(
                   'Groups',
                   style: TextStyle(
                     fontSize: 24,
@@ -129,7 +116,10 @@ class _GroupHomeState extends State<GroupHome> {
                       fillColor: const Color(0xFFF5F5DC),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.brown, width: 2),
+                        borderSide: const BorderSide(
+                          color: Colors.brown,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -159,22 +149,33 @@ class _GroupHomeState extends State<GroupHome> {
                 itemCount: _groups.length,
                 itemBuilder: (context, index) {
                   String groupName = _groups[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.brown,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      groupName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFF5F5DC),
+                  return GestureDetector(
+                    onTap: () {
+                      // ✅ Navigate to GroupPage when tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GroupPage(groupName: groupName),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 20,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.brown,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        groupName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFF5F5DC),
+                        ),
                       ),
                     ),
                   );
