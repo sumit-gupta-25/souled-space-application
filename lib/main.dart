@@ -38,7 +38,6 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-<<<<<<< HEAD
       initialRoute: 'login',
       routes: {
         'login': (context) => const MyLogin(),
@@ -50,19 +49,6 @@ class MainApp extends StatelessWidget {
         'anonymous_venting_wall': (context) => const AnonymousVentingWall(),
         'journaling': (context) => const Journaling(),
         'myjournals': (context) => const MyJournals(),
-=======
-      home: MyLogin(),
-      routes: {
-        'register': (context) => MyRegister(),
-        'login': (context) => MyLogin(),
-        'home': (context) => MyHome(),
-        'individual': (context) => IndiHome(),
-        'stress_thermometer': (context) => StressThermometer(),
-        'journaling': (context) => Journaling(),
-        'myjournals': (context) => MyJournals(),
-        'anonymous_venting_wall': (context) => AnonymousVentingWall(),
-        'community': (context) => GroupHome(),
->>>>>>> 83243f9a2dd2f9761b1075ccf31f1494b18e889d
       },
     );
   }
