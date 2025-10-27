@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:souled_space_application/group/group_home.dart';
-import 'package:souled_space_application/group/group_page.dart';
+import 'package:souled_space_application/home.dart';
 import 'package:souled_space_application/individual/anonymous_venting_wall.dart';
+import 'package:souled_space_application/individual/indi_home.dart';
+import 'package:souled_space_application/individual/journaling.dart';
+import 'package:souled_space_application/individual/stress_thermometer.dart';
+import 'package:souled_space_application/login.dart';
+import 'package:souled_space_application/register.dart';
+import 'firebase_options.dart'; // 👈 auto-generated file
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Initialize Firebase before running the app
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MainApp());
 }
 
@@ -12,6 +24,20 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: GroupHome());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      initialRoute: 'login',
+      routes: {
+        'login': (context) => const MyLogin(),
+        'register': (context) => const MyRegister(),
+        'home': (context) => const MyHome(),
+        'individual': (context) => const IndiHome(),
+        'group': (context) => const GroupHome(),
+        'stress_thermometer': (context) => const StressThermometer(),
+        'anonymous_venting_wall': (context) => const AnonymousVentingWall(),
+        'journaling': (context) => const Journaling(),
+        'myjournals': (context) => const MyJournals(),
+      },
+    );
   }
 }
