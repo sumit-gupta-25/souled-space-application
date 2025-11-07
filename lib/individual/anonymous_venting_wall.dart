@@ -138,10 +138,7 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
 
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 6),
-                            alignment:
-                                isMe
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
+                            alignment: Alignment.center, // Center all messages
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
                                 maxWidth:
@@ -154,12 +151,14 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
                                       isMe
                                           ? Colors.brown[400]
                                           : const Color(0xFFF5F5DC),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: const Radius.circular(14),
-                                    topRight: const Radius.circular(14),
-                                    bottomLeft: Radius.circular(isMe ? 14 : 0),
-                                    bottomRight: Radius.circular(isMe ? 0 : 14),
-                                  ),
+                                  border:
+                                      isMe
+                                          ? null
+                                          : Border.all(
+                                            color: Colors.brown,
+                                            width: 1.5,
+                                          ), // border for received msgs
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
