@@ -1,148 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:souled_space_application/ui_blueprint.dart';
-
-class Journaling extends StatefulWidget {
-  const Journaling({super.key});
-
-  @override
-  JournalingState createState() => JournalingState();
-}
-
-class JournalingState extends State<Journaling> {
-  final TextEditingController _textController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return UiTemplate(
-      title: 'Journaling',
-      body: Stack(
-        children: [
-          Container(
-            padding: EdgeInsets.only(left: 60, top: 50, right: 35),
-            child: Text(
-              '"Let Your Diary Carry\nWhat Burdens You..."',
-              style: TextStyle(
-                color: Colors.brown,
-                fontSize: 30,
-                fontStyle: FontStyle.italic,
-                decoration: TextDecoration.underline,
-                decorationColor: Colors.brown,
-              ),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.only(left: 10, top: 180, right: 10),
-            child: SingleChildScrollView(
-              child: Container(
-                margin: EdgeInsets.only(left: 20, right: 20),
-                height: 500,
-                width: 350,
-                child: TextField(
-                  maxLength: 5000,
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  buildCounter: (
-                    context, {
-                    required int currentLength,
-                    required bool isFocused,
-                    required int? maxLength,
-                  }) {
-                    return Text(
-                      '$currentLength / $maxLength',
-                      style: TextStyle(color: Colors.brown),
-                    );
-                  },
-                  controller: _textController,
-                  maxLines: 16,
-                  style: TextStyle(color: Colors.brown, fontSize: 18),
-                  decoration: InputDecoration(
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.brown),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.brown),
-                    ),
-                    hintText: "Enter Your thoughts",
-                    hintStyle: TextStyle(color: Colors.brown),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pushNamed(context, 'myjournals');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.brown,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(
-                      Icons.my_library_books,
-                      color: Color(0xFFF5F5DC),
-                    ),
-                    label: const Text(
-                      'My Journals',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFFF5F5DC),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.brown,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(
-                      Icons.backup_outlined,
-                      color: Color(0xFFF5F5DC),
-                    ),
-                    label: const Text(
-                      'Save',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFFF5F5DC),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
 
 class MyJournals extends StatefulWidget {
   const MyJournals({super.key});
@@ -152,19 +11,195 @@ class MyJournals extends StatefulWidget {
 }
 
 class MyJournalsState extends State<MyJournals> {
-  List<String> entries = [];
+  final _auth = FirebaseAuth.instance;
+  late DatabaseReference _userJournalsRef;
+  List<Map<String, dynamic>> journals = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchEntries(); // load entries from database
+    _initializeDatabase();
   }
 
-  Future<void> fetchEntries() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      entries = ['First saved thought', 'Second saved memory'];
+  void _initializeDatabase() {
+    final userId = _auth.currentUser?.uid;
+    if (userId != null) {
+      _userJournalsRef = FirebaseDatabase.instance
+          .ref()
+          .child('journals')
+          .child(userId);
+      fetchJournals();
+    }
+  }
+
+  Future<void> fetchJournals() async {
+    final snapshot = await _userJournalsRef.get();
+    List<Map<String, dynamic>> loadedJournals = [];
+
+    if (snapshot.exists) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      data.forEach((key, value) {
+        loadedJournals.add({
+          'id': key,
+          'name': value['name'] ?? '',
+          'content': value['content'] ?? '',
+          'createdAt': value['createdAt'] ?? '',
+        });
+      });
+    }
+
+    // ✅ Sort by creation date (newest first)
+    loadedJournals.sort((a, b) {
+      try {
+        final dateA = DateFormat('yyyy-MM-dd HH:mm').parse(a['createdAt']);
+        final dateB = DateFormat('yyyy-MM-dd HH:mm').parse(b['createdAt']);
+        return dateB.compareTo(dateA);
+      } catch (e) {
+        return 0;
+      }
     });
+
+    setState(() {
+      journals = loadedJournals;
+      isLoading = false;
+    });
+  }
+
+  Future<void> _saveJournal(
+    String name,
+    String content, {
+    String? existingId,
+  }) async {
+    if (name.trim().isEmpty || content.trim().isEmpty) return;
+
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    // Ensure unique journal name for same user
+    final duplicate = journals.any(
+      (j) =>
+          j['name'].toLowerCase() == name.toLowerCase() &&
+          j['id'] != existingId,
+    );
+    if (duplicate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Journal name must be unique.')),
+      );
+      return;
+    }
+
+    final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
+    if (existingId != null) {
+      await _userJournalsRef.child(existingId).update({
+        'name': name,
+        'content': content,
+        'createdAt': now,
+      });
+    } else {
+      await _userJournalsRef.push().set({
+        'name': name,
+        'content': content,
+        'createdAt': now,
+      });
+    }
+
+    fetchJournals();
+    Navigator.pop(context);
+  }
+
+  Future<void> _deleteJournal(String id) async {
+    await _userJournalsRef.child(id).remove();
+    fetchJournals();
+  }
+
+  void _showJournalPopup({Map<String, dynamic>? existingJournal}) {
+    final nameController = TextEditingController(
+      text: existingJournal?['name'] ?? '',
+    );
+    final contentController = TextEditingController(
+      text: existingJournal?['content'] ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFFF8E1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Text(
+            existingJournal == null ? 'New Journal' : 'Edit Journal',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.brown,
+            ),
+          ),
+          content: SizedBox(
+            height: 250,
+            child: Column(
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Journal Name',
+                    labelStyle: TextStyle(color: Colors.brown),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Expanded(
+                  child: TextField(
+                    controller: contentController,
+                    maxLines: null,
+                    expands: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your thoughts...',
+                      hintStyle: TextStyle(color: Colors.brown),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.brown),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.brown),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.brown),
+              ),
+            ),
+            ElevatedButton(
+              onPressed:
+                  () => _saveJournal(
+                    nameController.text,
+                    contentController.text,
+                    existingId: existingJournal?['id'],
+                  ),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.brown),
+              child: const Text(
+                'Save',
+                style: TextStyle(color: Color(0xFFF5F5DC)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -178,10 +213,14 @@ class MyJournalsState extends State<MyJournals> {
         backgroundColor: Colors.brown,
       ),
       body:
-          entries.isEmpty
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: Colors.brown),
+              )
+              : journals.isEmpty
               ? const Center(
                 child: Text(
-                  'No entries yet.\nStart writing your thoughts!',
+                  'No journals yet!\nClick the + button to create one.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
@@ -192,8 +231,9 @@ class MyJournalsState extends State<MyJournals> {
               )
               : ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: entries.length,
+                itemCount: journals.length,
                 itemBuilder: (context, index) {
+                  final journal = journals[index];
                   return Card(
                     color: const Color(0xFFFFF8E1),
                     shape: RoundedRectangleBorder(
@@ -202,24 +242,38 @@ class MyJournalsState extends State<MyJournals> {
                     ),
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     child: ListTile(
+                      onTap: () => _showJournalPopup(existingJournal: journal),
                       title: Text(
-                        'Journal ${index + 1}',
+                        journal['name'],
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.brown,
+                          fontSize: 18,
                         ),
                       ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 6.0),
                         child: Text(
-                          entries[index],
-                          style: const TextStyle(color: Colors.black87),
+                          'Created on: ${journal['createdAt']}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black54,
+                          ),
                         ),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.brown),
+                        onPressed: () => _deleteJournal(journal['id']),
                       ),
                     ),
                   );
                 },
               ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showJournalPopup(),
+        backgroundColor: Colors.brown,
+        child: const Icon(Icons.add, color: Color(0xFFF5F5DC)),
+      ),
     );
   }
 }

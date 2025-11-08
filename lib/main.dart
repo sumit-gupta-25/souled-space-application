@@ -34,7 +34,6 @@ class MainApp extends StatelessWidget {
         'group': (context) => const GroupHome(),
         'stress_thermometer': (context) => const StressThermometer(),
         'anonymous_venting_wall': (context) => const AnonymousVentingWall(),
-        'journaling': (context) => const Journaling(),
         'myjournals': (context) => const MyJournals(),
       },
     );

@@ -105,7 +105,7 @@ class IndiHomeState extends State<IndiHome> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, 'journaling');
+                    Navigator.pushNamed(context, 'myjournals');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.brown,
