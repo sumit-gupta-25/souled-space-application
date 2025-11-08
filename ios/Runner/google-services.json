@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "996871260981",
+    "project_id": "souledspace-c5d3b",
+    "storage_bucket": "souledspace-c5d3b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:996871260981:android:795326c44a0933abfeda7c",
+        "android_client_info": {
+          "package_name": "com.example.souledSpace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCILo3QNFv8jlVw94T-cD5kSp-VPSw41Pw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:996871260981:android:31303dbd78327cfcfeda7c",
+        "android_client_info": {
+          "package_name": "com.example.souled_space_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCILo3QNFv8jlVw94T-cD5kSp-VPSw41Pw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

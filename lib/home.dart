@@ -138,7 +138,7 @@ class MyHomeState extends State<MyHome> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, 'community');
+                    Navigator.pushNamed(context, 'group');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.brown,
@@ -155,7 +155,7 @@ class MyHomeState extends State<MyHome> {
                       Icon(Icons.groups, color: Color(0xFFF5F5DC), size: 30),
                       SizedBox(width: 20),
                       Text(
-                        'Community',
+                        'Group',
                         style: TextStyle(
                           fontSize: 26,
                           color: Color(0xFFF5F5DC),

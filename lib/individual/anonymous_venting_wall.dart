@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:souled_space_application/ui_blueprint.dart';
 
 class AnonymousVentingWall extends StatefulWidget {
@@ -11,22 +13,97 @@ class AnonymousVentingWall extends StatefulWidget {
 
 class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
   final TextEditingController _ventController = TextEditingController();
-  final List<Map<String, dynamic>> _ventList = []; // Stores text + time
+  final ScrollController _scrollController = ScrollController();
 
-  void _postVenting() {
+  final _auth = FirebaseAuth.instance;
+  final _database = FirebaseDatabase.instance.ref();
+
+  String? _nickname;
+  List<Map<String, dynamic>> _ventList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNickname();
+    _listenToVents();
+  }
+
+  Future<void> _fetchNickname() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      final snapshot =
+          await _database.child('users/${user.uid}/nickname').get();
+
+      if (snapshot.exists && snapshot.value != null) {
+        setState(() {
+          _nickname = snapshot.value.toString();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching nickname: $e');
+    }
+  }
+
+  void _listenToVents() {
+    _database.child('vents').onValue.listen((DatabaseEvent event) {
+      final data = event.snapshot.value;
+      if (data == null) {
+        setState(() => _ventList = []);
+        return;
+      }
+
+      final Map<dynamic, dynamic> map = data as Map<dynamic, dynamic>;
+      final List<Map<String, dynamic>> tempList = [];
+
+      map.forEach((key, value) {
+        tempList.add({
+          'id': key,
+          'uid': value['uid'] ?? '',
+          'nickname': value['nickname'] ?? 'Anonymous',
+          'text': value['text'] ?? '',
+          'time': value['time'] ?? '',
+        });
+      });
+
+      // Sort oldest to newest
+      tempList.sort((a, b) => a['time'].compareTo(b['time']));
+      setState(() => _ventList = tempList);
+
+      // Scroll to bottom when new messages arrive
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
+      });
+    });
+  }
+
+  Future<void> _postVenting() async {
     if (_ventController.text.trim().isEmpty) return;
 
-    final now = DateTime.now();
-    final formattedTime = DateFormat('dd MMM yyyy, hh:mm a').format(now);
+    if (_nickname == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not fetch your nickname yet. Try again.'),
+        ),
+      );
+      return;
+    }
 
-    setState(() {
-      _ventList.insert(0, {
-        'text': _ventController.text.trim(),
-        'time': formattedTime,
-      });
-      _ventController.clear();
+    final now = DateTime.now();
+    final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    final user = _auth.currentUser;
+
+    await _database.child('vents').push().set({
+      'uid': user?.uid ?? '',
+      'nickname': _nickname,
+      'text': _ventController.text.trim(),
+      'time': formattedTime,
     });
 
+    _ventController.clear();
     FocusScope.of(context).unfocus();
   }
 
@@ -35,69 +112,10 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
     return UiTemplate(
       title: 'Anonymous Venting Wall',
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            const Text(
-              'Express yourself freely...',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.brown,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Input box for typing vent
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5DC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.brown, width: 2),
-              ),
-              child: TextField(
-                controller: _ventController,
-                maxLines: 4,
-                style: const TextStyle(fontSize: 18, color: Colors.brown),
-                decoration: const InputDecoration(
-                  hintText: 'Type your thoughts here...',
-                  hintStyle: TextStyle(color: Colors.brown),
-                  contentPadding: EdgeInsets.all(16),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Post button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _postVenting,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.brown,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Post Anonymously',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Color(0xFFF5F5DC),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Vent list
+            // Vents list
             Expanded(
               child:
                   _ventList.isEmpty
@@ -112,44 +130,125 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
                         ),
                       )
                       : ListView.builder(
+                        controller: _scrollController,
                         itemCount: _ventList.length,
                         itemBuilder: (context, index) {
                           final vent = _ventList[index];
+                          final isMe = vent['uid'] == _auth.currentUser?.uid;
+
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.brown,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  vent['text'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    color: Color(0xFFF5F5DC),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            alignment:
+                                isMe
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.7,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isMe
+                                          ? Colors.brown[400]
+                                          : const Color(0xFFF5F5DC),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(14),
+                                    topRight: const Radius.circular(14),
+                                    bottomLeft: Radius.circular(isMe ? 14 : 0),
+                                    bottomRight: Radius.circular(isMe ? 0 : 14),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  vent['time'],
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFFF5F5DC),
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      vent['nickname'],
+                                      style: TextStyle(
+                                        color:
+                                            isMe
+                                                ? const Color(0xFFF5F5DC)
+                                                : Colors.brown,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      vent['text'],
+                                      style: TextStyle(
+                                        color:
+                                            isMe
+                                                ? const Color(0xFFF5F5DC)
+                                                : Colors.brown[900],
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: Text(
+                                        _formatTime(vent['time']),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              isMe
+                                                  ? const Color(0xFFF5F5DC)
+                                                  : Colors.brown[700],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           );
                         },
                       ),
             ),
+
+            // Input field
+            Container(
+              margin: const EdgeInsets.only(top: 10, bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5DC),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: Colors.brown, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _ventController,
+                      style: const TextStyle(fontSize: 16, color: Colors.brown),
+                      decoration: const InputDecoration(
+                        hintText: "Type something...",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _postVenting,
+                    icon: const Icon(Icons.send, color: Colors.brown),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatTime(String time) {
+    try {
+      final dateTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(time);
+      return DateFormat('dd MMM, hh:mm a').format(dateTime);
+    } catch (_) {
+      return time;
+    }
   }
 }
