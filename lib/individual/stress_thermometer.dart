@@ -33,13 +33,13 @@ class _StressThermometerState extends State<StressThermometer>
   void _navigateBasedOnLevel() {
     // For now, all levels go to Journaling
     if (_stressLevel > 0 && _stressLevel <= 25) {
-      Navigator.pushNamed(context, 'journaling');
+      Navigator.pushNamed(context, 'myjournals');
     } else if (_stressLevel > 25 && _stressLevel <= 50) {
-      Navigator.pushNamed(context, 'journaling');
+      Navigator.pushNamed(context, 'myjournals');
     } else if (_stressLevel > 50 && _stressLevel <= 75) {
-      Navigator.pushNamed(context, 'journaling');
+      Navigator.pushNamed(context, 'myjournals');
     } else {
-      Navigator.pushNamed(context, 'journaling');
+      Navigator.pushNamed(context, 'myjournals');
     }
   }
 
