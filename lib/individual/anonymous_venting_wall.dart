@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:souled_space_application/ui_blueprint.dart';
+import 'package:souled_space_application/services/stress_detection_service.dart';
 
 class AnonymousVentingWall extends StatefulWidget {
   const AnonymousVentingWall({super.key});
@@ -20,6 +21,7 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
 
   String? _nickname;
   List<Map<String, dynamic>> _ventList = [];
+  bool _isAnalyzing = false;
 
   @override
   void initState() {
@@ -64,6 +66,8 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
           'nickname': value['nickname'] ?? 'Anonymous',
           'text': value['text'] ?? '',
           'time': value['time'] ?? '',
+          'stress_level': value['stress_level'] ?? 0,
+          'prediction': value['prediction'] ?? '',
         });
       });
 
@@ -92,19 +96,46 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
       return;
     }
 
-    final now = DateTime.now();
-    final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
-    final user = _auth.currentUser;
+    setState(() => _isAnalyzing = true);
 
-    await _database.child('vents').push().set({
-      'uid': user?.uid ?? '',
-      'nickname': _nickname,
-      'text': _ventController.text.trim(),
-      'time': formattedTime,
-    });
+    try {
+      // Analyze text with ML model
+      final analysisResult = await StressDetectionService.analyzeText(
+        _ventController.text.trim(),
+      );
 
-    _ventController.clear();
-    FocusScope.of(context).unfocus();
+      final stressLevel = analysisResult?['stress_level'] ?? 50.0;
+      final prediction = analysisResult?['prediction'] ?? 'unknown';
+
+      final now = DateTime.now();
+      final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      final user = _auth.currentUser;
+
+      // Save to Firebase with stress level and prediction
+      await _database.child('vents').push().set({
+        'uid': user?.uid ?? '',
+        'nickname': _nickname,
+        'text': _ventController.text.trim(),
+        'time': formattedTime,
+        'stress_level': stressLevel,
+        'prediction': prediction,
+      });
+
+      _ventController.clear();
+      FocusScope.of(context).unfocus();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Posted! Stress Level: ${stressLevel.toInt()}%'),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error posting: $e')));
+    } finally {
+      setState(() => _isAnalyzing = false);
+    }
   }
 
   @override
@@ -138,7 +169,7 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
 
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 6),
-                            alignment: Alignment.center, // Center all messages
+                            alignment: Alignment.center,
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
                                 maxWidth:
@@ -157,7 +188,7 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
                                           : Border.all(
                                             color: Colors.brown,
                                             width: 1.5,
-                                          ), // border for received msgs
+                                          ),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Column(
@@ -185,6 +216,20 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
                                         fontSize: 16,
                                       ),
                                     ),
+                                    const SizedBox(height: 4),
+                                    // Show stress level and prediction
+                                    if (vent['stress_level'] > 0)
+                                      Text(
+                                        'Stress: ${vent['stress_level'].toInt()}% | ${vent['prediction']}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              isMe
+                                                  ? const Color(0xFFF5F5DC)
+                                                  : Colors.brown[700],
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
                                     const SizedBox(height: 4),
                                     Align(
                                       alignment: Alignment.bottomRight,
@@ -229,10 +274,25 @@ class _AnonymousVentingWallState extends State<AnonymousVentingWall> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: _postVenting,
-                    icon: const Icon(Icons.send, color: Colors.brown),
-                  ),
+                  if (_isAnalyzing)
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.brown,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      onPressed: _postVenting,
+                      icon: const Icon(Icons.send, color: Colors.brown),
+                    ),
                 ],
               ),
             ),
