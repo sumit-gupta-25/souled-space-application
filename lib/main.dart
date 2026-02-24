@@ -9,6 +9,8 @@ import 'package:souled_space_application/individual/stress_thermometer.dart';
 import 'package:souled_space_application/login.dart';
 import 'package:souled_space_application/register.dart';
 import 'firebase_options.dart';
+import 'package:souled_space_application/individual/meditation_music.dart';
+import 'package:souled_space_application/individual/breathing_meditation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +27,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: 'login',
+      initialRoute: 'login',   
       routes: {
         'login': (context) => const MyLogin(),
         'register': (context) => const MyRegister(),
@@ -35,6 +37,8 @@ class MainApp extends StatelessWidget {
         'stress_thermometer': (context) => const StressThermometer(),
         'anonymous_venting_wall': (context) => const AnonymousVentingWall(),
         'myjournals': (context) => const MyJournals(),
+        'meditation_music': (context) => const MeditationMusicPage(),
+        'breathing_meditation': (context) => const BreathToRecharge (),
       },
     );
   }
