@@ -11,6 +11,7 @@ import 'package:souled_space_application/register.dart';
 import 'firebase_options.dart';
 import 'package:souled_space_application/individual/meditation_music.dart';
 import 'package:souled_space_application/individual/breathing_meditation.dart';
+import 'package:souled_space_application/individual/cbt_reflection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,7 @@ class MainApp extends StatelessWidget {
         'myjournals': (context) => const MyJournals(),
         'meditation_music': (context) => const MeditationMusicPage(),
         'breathing_meditation': (context) => const BreathToRecharge (),
+        'cbt_reflection': (context) => const CBTReflectionPage (),
       },
     );
   }
