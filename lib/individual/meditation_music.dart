@@ -112,6 +112,13 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
     playMusic();
   }
 
+  @override
+  void dispose() {
+    player.stop();
+    player.dispose();
+    super.dispose();
+  }
+
   String formatTime(Duration d) {
     String minutes = d.inMinutes.remainder(60).toString();
     String seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');

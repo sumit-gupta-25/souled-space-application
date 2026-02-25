@@ -116,6 +116,15 @@ class _BreathToRechargeState extends State<BreathToRecharge>
   }
 
   @override
+  void dispose() {
+    timer?.cancel();
+    controller.dispose();
+    player.stop();
+    player.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
