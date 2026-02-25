@@ -84,13 +84,19 @@ class _StressThermometerState extends State<StressThermometer>
 
   Map<String, String> getRecommendedAction(double level) {
     if (level <= 25) {
-      return {"label": "Explore My Mood Tracker", "route": "myjournals"};
-    } else if (level <= 50) {
       return {"label": "Write in My Journal", "route": "myjournals"};
+    } else if (level <= 50) {
+      return {
+        "label": "Listen to Something Calming",
+        "route": "meditation_music",
+      };
     } else if (level <= 75) {
-      return {"label": "Try a Breathing Exercise", "route": "myjournals"};
+      return {
+        "label": "Take a Moment to Breathe",
+        "route": "breathing_meditation",
+      };
     } else {
-      return {"label": "Take a Calming Exercise", "route": "myjournals"};
+      return {"label": "Gently Reflect with CBT", "route": "cbt_reflection"};
     }
   }
 
@@ -195,13 +201,13 @@ class _StressThermometerState extends State<StressThermometer>
 
   String getPopupMessage(double level) {
     if (level <= 25) {
-      return "You're feeling calm. Keep nurturing this peaceful energy.";
+      return "You’re feeling calm and grounded 🌿\n\nThis is a beautiful space to reflect. Consider journaling to preserve this clarity and positive energy.";
     } else if (level <= 50) {
-      return "A little tension is okay. You're handling things well.";
+      return "There’s a little tension present and that’s completely okay.\n\nA short relaxing meditation could help you gently unwind and reset.";
     } else if (level <= 75) {
-      return "You're experiencing some stress. Take a slow breath — you’ve got this.";
+      return "You’re carrying noticeable stress right now.\n\nLet’s pause together. A guided breathing exercise can help your body settle and regain balance.";
     } else {
-      return "It feels overwhelming right now. and that’s okay. Be gentle with yourself 🤍";
+      return "It feels overwhelming right now and that’s valid.\n\nA CBT reflection can help you untangle these thoughts and regain a sense of control. You don’t have to face this alone.";
     }
   }
 
@@ -330,6 +336,11 @@ class _StressThermometerState extends State<StressThermometer>
                         setState(() {
                           _stressLevel = value;
                         });
+                      },
+                      onChangeEnd: (value) {
+                        if (!_autoUpdateEnabled) {
+                          _showSupportPopup(value);
+                        }
                       },
                     ),
                   ],
