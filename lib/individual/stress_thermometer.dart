@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:souled_space_application/ui_blueprint.dart';
+import 'dart:async';
 
 class StressThermometer extends StatefulWidget {
   const StressThermometer({super.key});
@@ -15,6 +16,7 @@ class _StressThermometerState extends State<StressThermometer>
     with SingleTickerProviderStateMixin {
   double _stressLevel = 0.0;
   late AnimationController _waveController;
+  late StreamSubscription<DatabaseEvent> _ventSubscription;
 
   final _auth = FirebaseAuth.instance;
   final _database = FirebaseDatabase.instance.ref();
@@ -35,7 +37,7 @@ class _StressThermometerState extends State<StressThermometer>
   }
 
   void _listenToLatestVent() {
-    _database.child('vents').limitToLast(1).onValue.listen((
+    _ventSubscription = _database.child('vents').limitToLast(1).onValue.listen((
       DatabaseEvent event,
     ) {
       if (_autoUpdateEnabled && event.snapshot.exists) {
@@ -53,13 +55,19 @@ class _StressThermometerState extends State<StressThermometer>
               // Prevent duplicate popup for same stress level
               if (_lastShownLevel == stressLevel) return;
 
+              if (!mounted) return;
+
               setState(() {
                 _stressLevel = stressLevel;
               });
 
               _lastShownLevel = stressLevel;
 
+              if (!mounted) return;
+
               _showSupportPopup(stressLevel);
+
+              if (!mounted) return;
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -78,6 +86,7 @@ class _StressThermometerState extends State<StressThermometer>
 
   @override
   void dispose() {
+    _ventSubscription.cancel();
     _waveController.dispose();
     super.dispose();
   }
