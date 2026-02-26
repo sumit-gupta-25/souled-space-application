@@ -102,7 +102,9 @@ class MyLoginState extends State<MyLogin> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Colors.brown),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFF8F8F8),
+                              ),
                             ),
                             hintText: "Email",
                             hintStyle: const TextStyle(
@@ -133,7 +135,9 @@ class MyLoginState extends State<MyLogin> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Colors.brown),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFF8F8F8),
+                              ),
                             ),
                             hintText: "Password",
                             hintStyle: const TextStyle(
