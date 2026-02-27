@@ -1,377 +1,299 @@
-import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:souled_space_application/ui_blueprint.dart';
 
 class GroupPage extends StatefulWidget {
   final String groupName;
+  final String groupId;
+  final String adminId;
+  final List<String> emails;
 
-  const GroupPage({super.key, required this.groupName});
+  const GroupPage({
+    super.key,
+    required this.groupName,
+    required this.groupId,
+    required this.adminId,
+    required this.emails,
+  });
 
   @override
   State<GroupPage> createState() => _GroupPageState();
 }
 
 class _GroupPageState extends State<GroupPage> {
-  double stressLevel = 68;
+  late String groupName;
+  late String groupId;
+  late String adminId;
+  late List<String> emails;
 
-  // Dummy chat messages
-  final List<Map<String, dynamic>> messages = [
-    {
-      'sender': 'Alice',
-      'message': 'Completed today’s meditation session!',
-      'isMe': false,
-      'reactions': <String, int>{},
-    },
-    {
-      'sender': 'You',
-      'message': 'That’s awesome! I did yoga today.',
-      'isMe': true,
-      'reactions': <String, int>{},
-    },
-    {
-      'sender': 'Bob',
-      'message': 'Feeling much calmer after journaling.',
-      'isMe': false,
-      'reactions': <String, int>{},
-    },
-    {
-      'sender': 'You',
-      'message': 'Same here 😊',
-      'isMe': true,
-      'reactions': <String, int>{},
-    },
-  ];
+  DatabaseReference get messagesDbReference =>
+      FirebaseDatabase.instance.ref().child("messages").child(widget.groupId);
+  final User? currentUser = FirebaseAuth.instance.currentUser;
 
-  // Dummy group members
-  final List<String> groupMembers = ['Alice', 'Bob', 'Charlie', 'You'];
+  final TextEditingController messageController = TextEditingController();
 
-  final TextEditingController _messageController = TextEditingController();
+  List<Map<String, dynamic>> messages = [];
 
-  void _sendMessage() {
-    String text = _messageController.text.trim();
-    if (text.isEmpty) return;
-
-    setState(() {
-      messages.add({
-        'sender': 'You',
-        'message': text,
-        'isMe': true,
-        'reactions': <String, int>{},
-      });
-      _messageController.clear();
-    });
-  }
-
-  void _showGroupInfo() {
-    showModalBottomSheet(
+  void showGroupInfoDialog(
+    BuildContext context,
+    String adminId,
+    List<String> members,
+    String groupId,
+  ) {
+    showDialog(
       context: context,
-      backgroundColor: const Color(0xFFF5F5DC),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (context) => Padding(
-            padding: const EdgeInsets.all(20),
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: AppColors.background,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Admin",
+                style: TextStyle(fontSize: 14, color: AppColors.primary),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                adminId,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Divider(height: 10),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.brown,
-                      borderRadius: BorderRadius.circular(10),
+                const Text(
+                  "Members",
+                  style: TextStyle(fontSize: 14, color: AppColors.primary),
+                ),
+                const SizedBox(height: 5),
+
+                ...members.map(
+                  (email) => Padding(
+                    padding: const EdgeInsets.only(left: 15, top: 5, bottom: 5),
+                    child: Text(
+                      email,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Group Members',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown[800],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...groupMembers.map(
-                  (member) => ListTile(
-                    leading: const Icon(Icons.person, color: Colors.brown),
-                    title: Text(
-                      member,
-                      style: const TextStyle(color: Colors.brown, fontSize: 18),
+
+                const SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    "Group ID: $groupId",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-    );
-  }
-
-  // Reaction popup on long-press
-  void _showReactionPopup(int index) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 100),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F5DC),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children:
-                ['👍', '❤️', '👏', '🎉'].map((emoji) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        messages[index]['reactions'][emoji] =
-                            (messages[index]['reactions'][emoji] ?? 0) + 1;
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                  );
-                }).toList(),
-          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Close",
+                style: TextStyle(color: AppColors.primary),
+              ),
+            ),
+          ],
         );
       },
     );
   }
 
+  void sendMessage() {
+    final currentUserEmail = currentUser?.email;
+    final text = messageController.text.trim();
+    if (text.isEmpty) return;
+
+    messagesDbReference.push().set({
+      'senderId': currentUserEmail,
+      'text': text,
+      'timestamp': ServerValue.timestamp,
+    });
+
+    messageController.clear();
+  }
+
+  void listenToMessages() {
+    messagesDbReference.onValue.listen((event) {
+      final data = event.snapshot.value;
+
+      if (data == null) {
+        setState(() => messages = []);
+        return;
+      }
+
+      final Map<dynamic, dynamic> map = Map<dynamic, dynamic>.from(data as Map);
+
+      final List<Map<String, dynamic>> loadedMessages = [];
+
+      map.forEach((key, value) {
+        final msg = Map<dynamic, dynamic>.from(value);
+
+        loadedMessages.add({
+          'sender': msg['senderId'],
+          'text': msg['text'],
+          'time': msg['timestamp'],
+        });
+      });
+
+      loadedMessages.sort((a, b) => a['time'].compareTo(b['time']));
+
+      setState(() {
+        messages = loadedMessages;
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    groupId = widget.groupId;
+    groupName = widget.groupName;
+    adminId = widget.adminId;
+    emails = widget.emails;
+
+    listenToMessages();
+  }
+
   @override
   Widget build(BuildContext context) {
-    Color getColor(double value) {
-      if (value <= 50) return Colors.green;
-      if (value <= 75) return Colors.yellow[700]!;
-      return Colors.red;
-    }
-
+    final currentUserEmail = currentUser?.email;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.background,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         title: Text(widget.groupName),
-        backgroundColor: Colors.brown,
-        foregroundColor: const Color(0xFFF5F5DC),
-        elevation: 0,
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline, color: Color(0xFFF5F5DC)),
-            onPressed: _showGroupInfo,
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showGroupInfoDialog(
+                context,
+                widget.adminId,
+                widget.emails,
+                widget.groupId,
+              );
+            },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
+      body: Container(
+        color: AppColors.background,
+        child: Column(
+          children: [
+            // Messages area
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(12),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  final isMe = msg['sender'] == currentUserEmail;
+                  final time = DateTime.fromMillisecondsSinceEpoch(msg['time']);
 
-          // Stress Index
-          const Text(
-            'Group Stress Index',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.brown,
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Gauge
-          SizedBox(
-            width: 220,
-            height: 120,
-            child: CustomPaint(
-              painter: SpeedometerPainter(stressLevel, getColor(stressLevel)),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${stressLevel.toInt()}',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Text('Stress Level'),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Messages list
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                final isMe = msg['isMe'] as bool;
-
-                return GestureDetector(
-                  onLongPress: () => _showReactionPopup(index),
-                  child: Align(
+                  return Align(
                     alignment:
                         isMe ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.all(10),
+                      constraints: const BoxConstraints(maxWidth: 280),
                       decoration: BoxDecoration(
-                        color: isMe ? Colors.brown : const Color(0xFFF5F5DC),
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(16),
-                          topRight: const Radius.circular(16),
-                          bottomLeft: Radius.circular(isMe ? 16 : 0),
-                          bottomRight: Radius.circular(isMe ? 0 : 16),
-                        ),
+                        color:
+                            isMe ? Colors.brown.shade300 : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            isMe
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
                         children: [
-                          if (!isMe)
-                            Text(
-                              msg['sender'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.brown,
-                              ),
-                            ),
                           Text(
-                            msg['message'],
-                            style: TextStyle(
-                              color:
-                                  isMe ? const Color(0xFFF5F5DC) : Colors.brown,
-                              fontSize: 16,
+                            msg['sender'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-
-                          // Show reactions below message
-                          if (msg['reactions'] != null &&
-                              msg['reactions'].isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Wrap(
-                                spacing: 6,
-                                children:
-                                    msg['reactions'].entries.map<Widget>((e) {
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.7),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Text('${e.key} ${e.value}'),
-                                      );
-                                    }).toList(),
-                              ),
+                          Text(
+                            msg['text']!.toString(),
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "${time.hour}:${time.minute.toString().padLeft(2, '0')}",
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.black54,
                             ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
 
-          // Input box
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            color: const Color(0xFFF5F5DC),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Share your thoughts here',
-                      hintStyle: const TextStyle(color: Colors.brown),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: Colors.brown),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+            // Input area
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: messageController,
+                      minLines: 1,
+                      maxLines: 5,
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
+                      decoration: const InputDecoration(
+                        hintText: "Type a message",
+                        border: InputBorder.none,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _sendMessage,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.brown,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(Icons.send, color: Color(0xFFF5F5DC)),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: sendMessage,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-}
-
-// Custom painter for stress gauge
-class SpeedometerPainter extends CustomPainter {
-  final double value;
-  final Color color;
-
-  SpeedometerPainter(this.value, this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height);
-    final radius = size.width / 2.2;
-
-    final paint =
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 15
-          ..strokeCap = StrokeCap.round
-          ..color = Colors.grey[300]!;
-
-    // Background arc
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      pi,
-      pi,
-      false,
-      paint,
-    );
-
-    // Active arc
-    final sweepAngle = (value / 100) * pi;
-    paint.color = color;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      pi,
-      sweepAngle,
-      false,
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
