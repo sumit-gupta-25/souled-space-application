@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:souled_space_application/group/group_home.dart';
 import 'package:souled_space_application/home.dart';
-import 'package:souled_space_application/individual/anonymous_venting_wall.dart';
 import 'package:souled_space_application/individual/indi_home.dart';
 import 'package:souled_space_application/individual/journaling.dart';
 import 'package:souled_space_application/individual/stress_thermometer.dart';
@@ -12,6 +11,7 @@ import 'firebase_options.dart';
 import 'package:souled_space_application/individual/meditation_music.dart';
 import 'package:souled_space_application/individual/breathing_meditation.dart';
 import 'package:souled_space_application/individual/cbt_reflection.dart';
+import 'package:souled_space_application/individual/profile.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,11 +36,11 @@ class MainApp extends StatelessWidget {
         'individual': (context) => const IndiHome(),
         'group': (context) => const GroupHome(),
         'stress_thermometer': (context) => const StressThermometer(),
-        'anonymous_venting_wall': (context) => const AnonymousVentingWall(),
         'myjournals': (context) => const MyJournals(),
         'meditation_music': (context) => const MeditationMusicPage(),
         'breathing_meditation': (context) => const BreathToRecharge(),
         'cbt_reflection': (context) => const CBTReflectionPage(),
+        'profile': (context) => const ProfilePage(),
       },
     );
   }

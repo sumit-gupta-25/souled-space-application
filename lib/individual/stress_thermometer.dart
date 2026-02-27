@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:souled_space_application/ui_blueprint.dart';
+import 'dart:async';
 
 class StressThermometer extends StatefulWidget {
   const StressThermometer({super.key});
@@ -15,6 +16,7 @@ class _StressThermometerState extends State<StressThermometer>
     with SingleTickerProviderStateMixin {
   double _stressLevel = 0.0;
   late AnimationController _waveController;
+  late StreamSubscription<DatabaseEvent> _ventSubscription;
 
   final _auth = FirebaseAuth.instance;
   final _database = FirebaseDatabase.instance.ref();
@@ -35,7 +37,7 @@ class _StressThermometerState extends State<StressThermometer>
   }
 
   void _listenToLatestVent() {
-    _database.child('vents').limitToLast(1).onValue.listen((
+    _ventSubscription = _database.child('vents').limitToLast(1).onValue.listen((
       DatabaseEvent event,
     ) {
       if (_autoUpdateEnabled && event.snapshot.exists) {
@@ -53,13 +55,19 @@ class _StressThermometerState extends State<StressThermometer>
               // Prevent duplicate popup for same stress level
               if (_lastShownLevel == stressLevel) return;
 
+              if (!mounted) return;
+
               setState(() {
                 _stressLevel = stressLevel;
               });
 
               _lastShownLevel = stressLevel;
 
+              if (!mounted) return;
+
               _showSupportPopup(stressLevel);
+
+              if (!mounted) return;
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -78,19 +86,26 @@ class _StressThermometerState extends State<StressThermometer>
 
   @override
   void dispose() {
+    _ventSubscription.cancel();
     _waveController.dispose();
     super.dispose();
   }
 
   Map<String, String> getRecommendedAction(double level) {
     if (level <= 25) {
-      return {"label": "Explore My Mood Tracker", "route": "myjournals"};
-    } else if (level <= 50) {
       return {"label": "Write in My Journal", "route": "myjournals"};
+    } else if (level <= 50) {
+      return {
+        "label": "Listen to Something Calming",
+        "route": "meditation_music",
+      };
     } else if (level <= 75) {
-      return {"label": "Try a Breathing Exercise", "route": "myjournals"};
+      return {
+        "label": "Take a Moment to Breathe",
+        "route": "breathing_meditation",
+      };
     } else {
-      return {"label": "Take a Calming Exercise", "route": "myjournals"};
+      return {"label": "Gently Reflect with CBT", "route": "cbt_reflection"};
     }
   }
 
@@ -195,13 +210,13 @@ class _StressThermometerState extends State<StressThermometer>
 
   String getPopupMessage(double level) {
     if (level <= 25) {
-      return "You're feeling calm. Keep nurturing this peaceful energy.";
+      return "You’re feeling calm and grounded 🌿\n\nThis is a beautiful space to reflect. Consider journaling to preserve this clarity and positive energy.";
     } else if (level <= 50) {
-      return "A little tension is okay. You're handling things well.";
+      return "There’s a little tension present and that’s completely okay.\n\nA short relaxing meditation could help you gently unwind and reset.";
     } else if (level <= 75) {
-      return "You're experiencing some stress. Take a slow breath — you’ve got this.";
+      return "You’re carrying noticeable stress right now.\n\nLet’s pause together. A guided breathing exercise can help your body settle and regain balance.";
     } else {
-      return "It feels overwhelming right now. and that’s okay. Be gentle with yourself 🤍";
+      return "It feels overwhelming right now and that’s valid.\n\nA CBT reflection can help you untangle these thoughts and regain a sense of control. You don’t have to face this alone.";
     }
   }
 
@@ -330,6 +345,11 @@ class _StressThermometerState extends State<StressThermometer>
                         setState(() {
                           _stressLevel = value;
                         });
+                      },
+                      onChangeEnd: (value) {
+                        if (!_autoUpdateEnabled) {
+                          _showSupportPopup(value);
+                        }
                       },
                     ),
                   ],

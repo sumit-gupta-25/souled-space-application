@@ -9,7 +9,6 @@ class MeditationMusicPage extends StatefulWidget {
 }
 
 class _MeditationMusicPageState extends State<MeditationMusicPage> {
-
   final AudioPlayer player = AudioPlayer();
 
   int currentIndex = 0;
@@ -19,13 +18,12 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
   Duration position = Duration.zero;
 
   final List<Map<String, dynamic>> tracks = [
-
     {
       "title": "Forest Calm",
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       "color": Colors.green,
       "icon": Icons.park,
-      "gradient": [Color(0xFF2E7D32), Color(0xFF81C784)]
+      "gradient": [Color(0xFF2E7D32), Color(0xFF81C784)],
     },
 
     {
@@ -33,7 +31,7 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
       "color": Color(0xFF6D4C41),
       "icon": Icons.spa,
-      "gradient": [Color(0xFF4E342E), Color(0xFFA1887F)]
+      "gradient": [Color(0xFF4E342E), Color(0xFFA1887F)],
     },
 
     {
@@ -41,7 +39,7 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
       "color": Colors.black,
       "icon": Icons.piano,
-      "gradient": [Colors.black, Colors.grey]
+      "gradient": [Colors.black, Colors.grey],
     },
 
     {
@@ -49,7 +47,7 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
       "color": Colors.teal,
       "icon": Icons.water,
-      "gradient": [Color(0xFF00695C), Color(0xFF4DB6AC)]
+      "gradient": [Color(0xFF00695C), Color(0xFF4DB6AC)],
     },
 
     {
@@ -57,9 +55,8 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
       "color": Colors.indigo,
       "icon": Icons.nightlight_round,
-      "gradient": [Color(0xFF1A237E), Colors.black]
-    }
-
+      "gradient": [Color(0xFF1A237E), Colors.black],
+    },
   ];
 
   @override
@@ -76,10 +73,7 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
   }
 
   Future<void> playMusic() async {
-
-    await player.play(
-      UrlSource(tracks[currentIndex]["url"]),
-    );
+    await player.play(UrlSource(tracks[currentIndex]["url"]));
 
     setState(() {
       isPlaying = true;
@@ -87,7 +81,6 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
   }
 
   Future<void> pauseMusic() async {
-
     await player.pause();
 
     setState(() {
@@ -96,37 +89,37 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
   }
 
   void nextMusic() {
-
     setState(() {
-
       if (currentIndex < tracks.length - 1) {
         currentIndex++;
       } else {
         currentIndex = 0;
       }
-
     });
 
     playMusic();
   }
 
   void previousMusic() {
-
     setState(() {
-
       if (currentIndex > 0) {
         currentIndex--;
       } else {
         currentIndex = tracks.length - 1;
       }
-
     });
 
     playMusic();
   }
 
-  String formatTime(Duration d) {
+  @override
+  void dispose() {
+    player.stop();
+    player.dispose();
+    super.dispose();
+  }
 
+  String formatTime(Duration d) {
     String minutes = d.inMinutes.remainder(60).toString();
     String seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
 
@@ -135,38 +128,39 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
 
   @override
   Widget build(BuildContext context) {
-
     final track = tracks[currentIndex];
 
     return Scaffold(
-
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        automaticallyImplyLeading: false, // we add our own button
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
       body: Container(
-
         decoration: BoxDecoration(
-
           gradient: LinearGradient(
             colors: track["gradient"],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
-
         ),
 
         child: SafeArea(
-
           child: Column(
-
             mainAxisAlignment: MainAxisAlignment.center,
 
             children: [
-
               const SizedBox(height: 20),
 
-              Icon(
-                track["icon"],
-                size: 140,
-                color: Colors.white,
-              ),
+              Icon(track["icon"], size: 140, color: Colors.white),
 
               const SizedBox(height: 20),
 
@@ -185,19 +179,19 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
                 activeColor: Colors.white,
                 inactiveColor: Colors.white30,
                 min: 0,
-                max: duration.inSeconds.toDouble() == 0
-                    ? 1
-                    : duration.inSeconds.toDouble(),
-                value: position.inSeconds.toDouble().clamp(
-                    0,
+                max:
                     duration.inSeconds.toDouble() == 0
                         ? 1
-                        : duration.inSeconds.toDouble()),
+                        : duration.inSeconds.toDouble(),
+                value: position.inSeconds.toDouble().clamp(
+                  0,
+                  duration.inSeconds.toDouble() == 0
+                      ? 1
+                      : duration.inSeconds.toDouble(),
+                ),
                 onChanged: (value) async {
-
                   final pos = Duration(seconds: value.toInt());
                   await player.seek(pos);
-
                 },
               ),
 
@@ -208,7 +202,6 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                   children: [
-
                     Text(
                       formatTime(position),
                       style: const TextStyle(color: Colors.white),
@@ -218,7 +211,6 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
                       formatTime(duration),
                       style: const TextStyle(color: Colors.white),
                     ),
-
                   ],
                 ),
               ),
@@ -226,11 +218,9 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
               const SizedBox(height: 40),
 
               Row(
-
                 mainAxisAlignment: MainAxisAlignment.center,
 
                 children: [
-
                   IconButton(
                     iconSize: 50,
                     color: Colors.white,
@@ -244,18 +234,14 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
                     iconSize: 80,
                     color: Colors.white,
                     icon: Icon(
-                      isPlaying
-                          ? Icons.pause_circle
-                          : Icons.play_circle,
+                      isPlaying ? Icons.pause_circle : Icons.play_circle,
                     ),
                     onPressed: () {
-
                       if (isPlaying) {
                         pauseMusic();
                       } else {
                         playMusic();
                       }
-
                     },
                   ),
 
@@ -267,25 +253,17 @@ class _MeditationMusicPageState extends State<MeditationMusicPage> {
                     icon: const Icon(Icons.skip_next),
                     onPressed: nextMusic,
                   ),
-
                 ],
               ),
 
               if (track["title"] == "Night Meditation")
-
                 const Padding(
                   padding: EdgeInsets.only(top: 40),
 
-                  child: Icon(
-                    Icons.star,
-                    color: Colors.white70,
-                    size: 30,
-                  ),
-                )
-
+                  child: Icon(Icons.star, color: Colors.white70, size: 30),
+                ),
             ],
           ),
-
         ),
       ),
     );

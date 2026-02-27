@@ -11,7 +11,6 @@ class BreathToRecharge extends StatefulWidget {
 
 class _BreathToRechargeState extends State<BreathToRecharge>
     with SingleTickerProviderStateMixin {
-
   late AnimationController controller;
   final player = AudioPlayer();
 
@@ -36,24 +35,21 @@ class _BreathToRechargeState extends State<BreathToRecharge>
       lowerBound: .7,
       upperBound: 1.2,
     )..addStatusListener((status) async {
-
-        if (status == AnimationStatus.completed) {
-
-          if (holdMode) {
-            setState(() => phase = "Hold");
-            await Future.delayed(const Duration(seconds: 3));
-          }
-
-          setState(() => phase = "Exhale");
-          controller.reverse();
+      if (status == AnimationStatus.completed) {
+        if (holdMode) {
+          setState(() => phase = "Hold");
+          await Future.delayed(const Duration(seconds: 3));
         }
 
-        if (status == AnimationStatus.dismissed) {
-          setState(() => phase = "Inhale");
-          controller.forward();
-        }
+        setState(() => phase = "Exhale");
+        controller.reverse();
+      }
 
-      });
+      if (status == AnimationStatus.dismissed) {
+        setState(() => phase = "Inhale");
+        controller.forward();
+      }
+    });
 
     controller.forward();
     startTimer();
@@ -92,7 +88,6 @@ class _BreathToRechargeState extends State<BreathToRecharge>
   }
 
   void toggleSound() async {
-
     if (soundOn) {
       await player.pause();
     } else {
@@ -109,7 +104,6 @@ class _BreathToRechargeState extends State<BreathToRecharge>
   }
 
   Color bgColor() {
-
     if (phase == "Inhale") {
       return const Color(0xFFE6F4F1);
     }
@@ -122,72 +116,74 @@ class _BreathToRechargeState extends State<BreathToRecharge>
   }
 
   @override
-  Widget build(BuildContext context) {
+  void dispose() {
+    timer?.cancel();
+    controller.dispose();
+    player.stop();
+    player.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: bgColor(),
+        elevation: 0,
+        centerTitle: false,
+        automaticallyImplyLeading: false, // we add our own button
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
 
       backgroundColor: bgColor(),
 
       body: SafeArea(
-
         child: Column(
-
           mainAxisAlignment: MainAxisAlignment.center,
 
           children: [
-
             // top bar
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-
                 IconButton(
-                  icon: Icon(
-                    soundOn ? Icons.volume_up : Icons.volume_off,
-                  ),
+                  icon: Icon(soundOn ? Icons.volume_up : Icons.volume_off),
                   onPressed: toggleSound,
                 ),
 
-                const SizedBox(width: 10)
-
+                const SizedBox(width: 10),
               ],
             ),
 
             const Text(
               "Breath to Recharge",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
             ),
 
             const SizedBox(height: 10),
 
-            Text(
-              phase,
-              style: const TextStyle(fontSize: 20),
-            ),
+            Text(phase, style: const TextStyle(fontSize: 20)),
 
             const SizedBox(height: 15),
 
-            Text(
-              format(secondsLeft),
-              style: const TextStyle(fontSize: 18),
-            ),
+            Text(format(secondsLeft), style: const TextStyle(fontSize: 18)),
 
             const SizedBox(height: 50),
 
             Stack(
               alignment: Alignment.center,
               children: [
-
                 // ripple waves
                 ...List.generate(
                   3,
                   (i) => AnimatedBuilder(
                     animation: controller,
                     builder: (_, __) {
-
                       double scale = controller.value + (i * .2);
 
                       return Transform.scale(
@@ -212,7 +208,6 @@ class _BreathToRechargeState extends State<BreathToRecharge>
                 AnimatedBuilder(
                   animation: controller,
                   builder: (_, __) {
-
                     return Transform.scale(
                       scale: controller.value,
                       child: Container(
@@ -221,23 +216,19 @@ class _BreathToRechargeState extends State<BreathToRecharge>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const RadialGradient(
-                            colors: [
-                              Colors.white,
-                              Color(0xFFB2DFDB)
-                            ],
+                            colors: [Colors.white, Color(0xFFB2DFDB)],
                           ),
                           boxShadow: [
                             BoxShadow(
                               blurRadius: 40,
                               color: Colors.white.withOpacity(.6),
-                            )
+                            ),
                           ],
                         ),
                       ),
                     );
                   },
                 ),
-
               ],
             ),
 
@@ -246,7 +237,6 @@ class _BreathToRechargeState extends State<BreathToRecharge>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 ElevatedButton.icon(
                   onPressed: restart,
                   icon: const Icon(Icons.refresh),
@@ -266,14 +256,10 @@ class _BreathToRechargeState extends State<BreathToRecharge>
                 ElevatedButton.icon(
                   onPressed: toggleMode,
                   icon: const Icon(Icons.air),
-                  label: Text(
-                    holdMode ? "Normal Mode" : "Hold Mode",
-                  ),
+                  label: Text(holdMode ? "Normal Mode" : "Hold Mode"),
                 ),
-
               ],
             ),
-
           ],
         ),
       ),
