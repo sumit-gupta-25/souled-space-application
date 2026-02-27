@@ -28,7 +28,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: 'login',   
+      initialRoute: 'login',
       routes: {
         'login': (context) => const MyLogin(),
         'register': (context) => const MyRegister(),
@@ -39,8 +39,8 @@ class MainApp extends StatelessWidget {
         'anonymous_venting_wall': (context) => const AnonymousVentingWall(),
         'myjournals': (context) => const MyJournals(),
         'meditation_music': (context) => const MeditationMusicPage(),
-        'breathing_meditation': (context) => const BreathToRecharge (),
-        'cbt_reflection': (context) => const CBTReflectionPage (),
+        'breathing_meditation': (context) => const BreathToRecharge(),
+        'cbt_reflection': (context) => const CBTReflectionPage(),
       },
     );
   }
