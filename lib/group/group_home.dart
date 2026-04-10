@@ -367,7 +367,185 @@ class _GroupHomeState extends State<GroupHome> {
     });
   }
 
-  void joinGroupDialog() {}
+  void joinGroupDialog() {
+    final currentEmail = FirebaseAuth.instance.currentUser!.email;
+    final searchQuery = ValueNotifier<String>('');
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Join Group"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 🔎 Search Bar (we will wire later)
+                TextField(
+                  onChanged: (value) {
+                    searchQuery.value = value.toLowerCase();
+                  },
+                  decoration: InputDecoration(
+                    hintText: "Group Name",
+                    hintStyle: const TextStyle(fontStyle: FontStyle.italic),
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 📋 Firestore Groups List
+                SizedBox(
+                  height: 200,
+                  child: StreamBuilder(
+                    stream:
+                        FirebaseDatabase.instance.ref().child('groups').onValue,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (!snapshot.hasData ||
+                          snapshot.data!.snapshot.value == null) {
+                        return const Center(child: Text("No groups found"));
+                      }
+
+                      final data = Map<dynamic, dynamic>.from(
+                        snapshot.data!.snapshot.value as Map,
+                      );
+
+                      final groupEntries = data.entries.toList();
+
+                      return StreamBuilder(
+                        stream:
+                            FirebaseDatabase.instance
+                                .ref()
+                                .child('joinRequests')
+                                .onValue,
+                        builder: (context, joinSnapshot) {
+                          Set<String> requestedGroupIds = {};
+
+                          if (joinSnapshot.hasData &&
+                              joinSnapshot.data!.snapshot.value != null) {
+                            final joinData = Map<dynamic, dynamic>.from(
+                              joinSnapshot.data!.snapshot.value as Map,
+                            );
+
+                            joinData.forEach((key, value) {
+                              final requestData = Map<dynamic, dynamic>.from(
+                                value,
+                              );
+
+                              if (requestData['fromUserId'] == currentEmail) {
+                                requestedGroupIds.add(requestData['groupId']);
+                              }
+                            });
+                          }
+
+                          final filteredGroups =
+                              groupEntries.where((entry) {
+                                final groupId = entry.key;
+                                final groupData = Map<dynamic, dynamic>.from(
+                                  entry.value,
+                                );
+
+                                // ❌ already requested
+                                if (requestedGroupIds.contains(groupId)) {
+                                  return false;
+                                }
+
+                                // ❌ admin
+                                if (groupData['adminId'] == currentEmail) {
+                                  return false;
+                                }
+
+                                // ❌ member
+                                if (groupData.containsKey('members')) {
+                                  final membersMap = Map<dynamic, dynamic>.from(
+                                    groupData['members'],
+                                  );
+
+                                  if (membersMap.values.contains(
+                                    currentEmail,
+                                  )) {
+                                    return false;
+                                  }
+                                }
+
+                                return true;
+                              }).toList();
+
+                          return ListView.builder(
+                            itemCount: filteredGroups.length,
+                            itemBuilder: (context, index) {
+                              final groupId = filteredGroups[index].key;
+
+                              final groupData = Map<dynamic, dynamic>.from(
+                                filteredGroups[index].value,
+                              );
+
+                              final groupName = groupData['name'] ?? '';
+
+                              return Card(
+                                child: ListTile(
+                                  title: Text(
+                                    groupName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    groupId,
+                                    style: const TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 8,
+                                    ),
+                                  ),
+                                  trailing: SizedBox(
+                                    width: 100,
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        final requestRef =
+                                            FirebaseDatabase.instance
+                                                .ref()
+                                                .child('joinRequests')
+                                                .push();
+
+                                        await requestRef.set({
+                                          'groupId': groupId,
+                                          'fromUserId': currentEmail,
+                                        });
+                                      },
+                                      child: const Text(
+                                        "Send\nRequest",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
