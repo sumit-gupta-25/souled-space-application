@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:souled_space_application/group/group_home.dart';
 import 'package:souled_space_application/home.dart';
-import 'package:souled_space_application/individual/indi_home.dart';
 import 'package:souled_space_application/individual/journaling.dart';
 import 'package:souled_space_application/individual/stress_thermometer.dart';
 import 'package:souled_space_application/login.dart';
@@ -33,7 +32,6 @@ class MainApp extends StatelessWidget {
         'login': (context) => const MyLogin(),
         'register': (context) => const MyRegister(),
         'home': (context) => const MyHome(),
-        'individual': (context) => const IndiHome(),
         'group': (context) => const GroupHome(),
         'stress_thermometer': (context) => const StressThermometer(),
         'myjournals': (context) => const MyJournals(),
