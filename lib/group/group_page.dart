@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:souled_space_application/ui_blueprint.dart';
+import 'package:souled_space_application/services/ai_moderation_service.dart';
 
 class GroupPage extends StatefulWidget {
   final String groupName;
@@ -121,11 +122,45 @@ class _GroupPageState extends State<GroupPage> {
     );
   }
 
-  void sendMessage() {
+  Future<void> _showBlockedDialog(String reason) async {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text("Message Blocked 🚫"),
+            content: Text(
+              "Your message contains harmful content.\nReason: $reason",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void sendMessage() async {
     final currentUserEmail = currentUser?.email;
     final text = messageController.text.trim();
+
     if (text.isEmpty) return;
 
+    // AI Moderation
+    final result = await AiModerationService.checkText(text);
+
+    if (result["decision"] == "block") {
+      _showBlockedDialog(result["reason"]);
+      return;
+    }
+
+    if (result["decision"] == "warn") {
+      _showBlockedDialog("Please use respectful language.");
+      return;
+    }
+
+    // Send message if allowed
     messagesDbReference.push().set({
       'senderId': currentUserEmail,
       'text': text,
