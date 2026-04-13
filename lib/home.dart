@@ -619,6 +619,15 @@ class MyHomeState extends State<MyHome> {
         ),
       ),
 
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFF4F1EA),
+        elevation: 4,
+        child: Icon(Icons.chat_bubble_rounded, color: Colors.brown.shade600),
+        onPressed: () {
+          Navigator.pushNamed(context, 'chatbot');
+        },
+      ),
+
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
