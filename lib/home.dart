@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:souled_space_application/services/stress_detection_service.dart';
 import 'services/social_sync_handler.dart';
+import 'package:souled_space_application/services/ai_moderation_service.dart';
 
 class MyHome extends StatefulWidget {
   const MyHome({super.key});
@@ -96,6 +97,18 @@ class MyHomeState extends State<MyHome> {
     });
   }
 
+  Future<void> _showBlockedDialog(String reason) async {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text("Message Blocked 🚫"),
+            content: Text("Your message contains harmful content.\nReason: $reason"),
+            actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))],
+          ),
+    );
+  }
+
   Future<void> _postVenting() async {
     if (_ventController.text.trim().isEmpty) return;
 
@@ -109,6 +122,22 @@ class MyHomeState extends State<MyHome> {
     setState(() => _isAnalyzing = true);
 
     try {
+      // AI Moderation Service
+      final result = await AiModerationService.checkText(_ventController.text.trim());
+
+      if (result["decision"] == "block") {
+        _showBlockedDialog("This message may harm others' mental well-being. Please rephrase.");
+        setState(() => _isAnalyzing = false);
+        return;
+      }
+
+      // Treat WARN as BLOCK (for safety)
+      if (result["decision"] == "warn") {
+        _showBlockedDialog("This content may negatively affect someone's mental health. Please use kind language.");
+        setState(() => _isAnalyzing = false);
+        return;
+      }
+
       // Analyze text with ML model
       final analysisResult = await StressDetectionService.analyzeText(_ventController.text.trim());
 
@@ -295,7 +324,7 @@ class MyHomeState extends State<MyHome> {
 
                 const SizedBox(height: 10),
 
-                /// 🔥 COMMENT LIST
+                /// COMMENT LIST
                 Expanded(
                   child: StreamBuilder(
                     stream: _database.child('vents/$postId/comments').onValue,
@@ -356,7 +385,7 @@ class MyHomeState extends State<MyHome> {
                   ),
                 ),
 
-                /// 🔥 INPUT FIELD
+                /// INPUT FIELD
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
@@ -375,7 +404,25 @@ class MyHomeState extends State<MyHome> {
                         icon: const Icon(Icons.send, color: Colors.brown),
                         onPressed: () async {
                           final user = _auth.currentUser;
-                          if (user == null || commentController.text.trim().isEmpty) return;
+                          final text = commentController.text.trim();
+
+                          if (user == null || text.isEmpty) return;
+
+                          // AI moderation check for comment
+                          final result = await AiModerationService.checkText(text);
+
+                          if (result["decision"] == "block") {
+                            _showBlockedDialog("This message may harm others' mental well-being. Please rephrase.");
+                            return;
+                          }
+
+                          // Treat WARN as BLOCK (for safety)
+                          if (result["decision"] == "warn") {
+                            _showBlockedDialog(
+                              "This content may negatively affect someone's mental health. Please use kind language.",
+                            );
+                            return;
+                          }
 
                           await _database.child('vents/$postId/comments').push().set({
                             'uid': user.uid,
