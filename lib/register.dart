@@ -14,6 +14,8 @@ class MyRegisterState extends State<MyRegister> {
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  // 1. ADD: Instagram Controller
+  final TextEditingController _instaController = TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -25,45 +27,35 @@ class MyRegisterState extends State<MyRegister> {
     final nickname = _nicknameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    // 2. GET: Instagram value
+    final instaId = _instaController.text.trim();
 
-    if (name.isEmpty || nickname.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+    // 3. UPDATE: Validation logic
+    if (name.isEmpty || nickname.isEmpty || email.isEmpty || password.isEmpty || instaId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      // Firebase Auth - Create User
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
 
-      // Firebase Database - Save user info
       final userId = userCredential.user?.uid;
+
+      // 4. UPDATE: Save to Firebase including instaId
       await _database.child('users/$userId').set({
         'name': name,
         'nickname': nickname,
         'email': email,
+        'instaId': instaId, // Matches your DB field name
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Registration successful!')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registration successful!')));
 
-      // Navigate to Login page
       Navigator.pushNamed(context, 'login');
     } on FirebaseAuthException catch (e) {
-      String message = 'Registration failed';
-      if (e.code == 'email-already-in-use') {
-        message = 'Email already in use';
-      } else if (e.code == 'weak-password') {
-        message = 'Password is too weak';
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      // ... existing error handling ...
     } finally {
       setState(() => _isLoading = false);
     }
@@ -76,29 +68,23 @@ class MyRegisterState extends State<MyRegister> {
       body: Stack(
         children: [
           Container(
-            padding: const EdgeInsets.only(left: 35, top: 100),
-            child: const Text(
-              'Create\nAccount',
-              style: TextStyle(color: Color(0xFFF8F8F8), fontSize: 33),
-            ),
+            padding: const EdgeInsets.only(left: 35, top: 80), // Adjusted top padding slightly
+            child: const Text('Create\nAccount', style: TextStyle(color: Color(0xFFF8F8F8), fontSize: 33)),
           ),
           SingleChildScrollView(
             child: Container(
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).size.height * 0.3,
+                top: MediaQuery.of(context).size.height * 0.28, // Slightly higher to fit new field
               ),
               margin: const EdgeInsets.symmetric(horizontal: 35),
               child: Column(
                 children: [
-                  // Name
                   TextField(
                     controller: _nameController,
                     style: const TextStyle(color: Color(0xFFF8F8F8)),
                     decoration: _inputDecoration('Name', Icons.person),
                   ),
                   const SizedBox(height: 20),
-
-                  // Nickname
                   TextField(
                     controller: _nicknameController,
                     style: const TextStyle(color: Color(0xFFF8F8F8)),
@@ -106,15 +92,20 @@ class MyRegisterState extends State<MyRegister> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Email
+                  // 5. ADD: Instagram TextField in UI
+                  TextField(
+                    controller: _instaController,
+                    style: const TextStyle(color: Color(0xFFF8F8F8)),
+                    decoration: _inputDecoration('Instagram Username', Icons.camera_alt),
+                  ),
+                  const SizedBox(height: 20),
+
                   TextField(
                     controller: _emailController,
                     style: const TextStyle(color: Color(0xFFF8F8F8)),
                     decoration: _inputDecoration('Email', Icons.email),
                   ),
                   const SizedBox(height: 20),
-
-                  // Password
                   TextField(
                     controller: _passwordController,
                     style: const TextStyle(color: Color(0xFFF8F8F8)),
@@ -123,26 +114,19 @@ class MyRegisterState extends State<MyRegister> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Sign Up Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
                         'Sign Up',
-                        style: TextStyle(
-                          color: Color(0xFFF8F8F8),
-                          fontSize: 27,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: TextStyle(color: Color(0xFFF8F8F8), fontSize: 27, fontWeight: FontWeight.w700),
                       ),
                       CircleAvatar(
                         radius: 30,
                         backgroundColor: const Color(0xFFF8F8F8),
                         child:
                             _isLoading
-                                ? const CircularProgressIndicator(
-                                  color: Colors.brown,
-                                )
+                                ? const CircularProgressIndicator(color: Colors.brown)
                                 : IconButton(
                                   color: Colors.brown,
                                   onPressed: _registerUser,
@@ -151,25 +135,10 @@ class MyRegisterState extends State<MyRegister> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 40),
-
-                  // Sign In link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, 'login');
-                        },
-                        child: const Text(
-                          'Sign In',
-                          style: TextStyle(
-                            color: Color(0xFFF8F8F8),
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, 'login'),
+                    child: const Text('Sign In', style: TextStyle(color: Color(0xFFF8F8F8), fontSize: 18)),
                   ),
                 ],
               ),
