@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:souled_space_application/group/group_home.dart';
 import 'package:souled_space_application/home.dart';
 import 'package:souled_space_application/individual/indi_home.dart';
@@ -13,9 +14,11 @@ import 'package:souled_space_application/individual/breathing_meditation.dart';
 import 'package:souled_space_application/individual/cbt_reflection.dart';
 import 'package:souled_space_application/individual/profile.dart';
 
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const MainApp());
@@ -27,8 +30,9 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: scaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
-      initialRoute: 'login',
+      initialRoute: 'register',
       routes: {
         'login': (context) => const MyLogin(),
         'register': (context) => const MyRegister(),
