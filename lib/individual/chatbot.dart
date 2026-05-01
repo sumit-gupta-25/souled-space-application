@@ -55,7 +55,11 @@ class _ChatbotPageState extends State<ChatbotPage> {
             const CircleAvatar(
               radius: 14,
               backgroundColor: Colors.brown,
-              child: Icon(Icons.favorite, size: 14, color: Colors.white),
+              child: Icon(
+                Icons.wb_sunny_outlined,
+                size: 14,
+                color: Colors.white,
+              ),
             ),
           if (!isUser) const SizedBox(width: 6),
 
@@ -117,7 +121,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
     messages.add({
       "role": "bot",
-      "text": "Hey 🤍 I'm here for you. How are you feeling today?",
+      "text": "Hey, I'm here for you. How are you feeling today?",
     });
   }
 
@@ -127,7 +131,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
       backgroundColor: const Color(0xFFF4F1EA),
       appBar: AppBar(
         title: const Text(
-          "Your Companion 🤝",
+          "Clarity Bot",
           style: TextStyle(
             color: Color(0xFFF4F1EA),
             fontWeight: FontWeight.bold,
