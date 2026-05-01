@@ -1,5 +1,5 @@
 name: souled_space_application
-description: "A new Flutter project."
+description: "Souled Space - Mental Wellness App"
 publish_to: 'none'
 version: 0.1.0
 
@@ -16,13 +16,32 @@ dependencies:
   http: ^1.1.0 
   audioplayers: ^6.0.0
   flutter_dotenv: ^5.1.0
+  uuid: ^4.3.3 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.4.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/icon.png
+    - assets/logo.png
+
+flutter_native_splash:
+  color: "#F5F5DC"  # matches your UI (beige)
+  image: assets/logo.png
+  android: true
+  ios: true
+  android_gravity: center
+  ios_content_mode: center
+  fullscreen: true
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"

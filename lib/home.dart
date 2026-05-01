@@ -47,7 +47,8 @@ class MyHomeState extends State<MyHome> {
       final user = _auth.currentUser;
       if (user == null) return;
 
-      final snapshot = await _database.child('users/${user.uid}/nickname').get();
+      final snapshot =
+          await _database.child('users/${user.uid}/nickname').get();
 
       if (snapshot.exists && snapshot.value != null) {
         setState(() {
@@ -103,8 +104,15 @@ class MyHomeState extends State<MyHome> {
       builder:
           (_) => AlertDialog(
             title: const Text("Message Blocked 🚫"),
-            content: Text("Your message contains harmful content.\nReason: $reason"),
-            actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))],
+            content: Text(
+              "Your message contains harmful content.\nReason: $reason",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
           ),
     );
   }
@@ -113,9 +121,11 @@ class MyHomeState extends State<MyHome> {
     if (_ventController.text.trim().isEmpty) return;
 
     if (_nickname == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Could not fetch your nickname yet. Try again.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not fetch your nickname yet. Try again.'),
+        ),
+      );
       return;
     }
 
@@ -123,23 +133,31 @@ class MyHomeState extends State<MyHome> {
 
     try {
       // AI Moderation Service
-      final result = await AiModerationService.checkText(_ventController.text.trim());
+      final result = await AiModerationService.checkText(
+        _ventController.text.trim(),
+      );
 
       if (result["decision"] == "block") {
-        _showBlockedDialog("This message may harm others' mental well-being. Please rephrase.");
+        _showBlockedDialog(
+          "This message may harm others' mental well-being. Please rephrase.",
+        );
         setState(() => _isAnalyzing = false);
         return;
       }
 
       // Treat WARN as BLOCK (for safety)
       if (result["decision"] == "warn") {
-        _showBlockedDialog("This content may negatively affect someone's mental health. Please use kind language.");
+        _showBlockedDialog(
+          "This content may negatively affect someone's mental health. Please use kind language.",
+        );
         setState(() => _isAnalyzing = false);
         return;
       }
 
       // Analyze text with ML model
-      final analysisResult = await StressDetectionService.analyzeText(_ventController.text.trim());
+      final analysisResult = await StressDetectionService.analyzeText(
+        _ventController.text.trim(),
+      );
 
       final stressLevel = analysisResult?['stress_level'] ?? 50.0;
       final prediction = analysisResult?['prediction'] ?? 'unknown';
@@ -163,11 +181,15 @@ class MyHomeState extends State<MyHome> {
       _ventController.clear();
       FocusScope.of(context).unfocus();
 
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Posted! Stress Level: ${stressLevel.toInt()}%'),
+        ),
+      );
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Posted! Stress Level: ${stressLevel.toInt()}%')));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error posting: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error posting: $e')));
     } finally {
       setState(() => _isAnalyzing = false);
     }
@@ -191,7 +213,9 @@ class MyHomeState extends State<MyHome> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
@@ -206,14 +230,21 @@ class MyHomeState extends State<MyHome> {
                   Container(
                     width: 50,
                     height: 5,
-                    decoration: BoxDecoration(color: Colors.brown[300], borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(
+                      color: Colors.brown[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
                   const Text(
                     "Let It Out 🤍",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.brown),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
@@ -227,7 +258,10 @@ class MyHomeState extends State<MyHome> {
                       hintText: "What's on your mind?",
                       filled: true,
                       fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
 
@@ -238,7 +272,10 @@ class MyHomeState extends State<MyHome> {
                     children: [
                       Text(
                         "${_ventController.text.length} characters",
-                        style: const TextStyle(fontSize: 12, color: Colors.brown),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.brown,
+                        ),
                       ),
 
                       _isAnalyzing
@@ -247,8 +284,13 @@ class MyHomeState extends State<MyHome> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.brown,
                               foregroundColor: const Color(0xFFF5F5DC),
-                              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 25,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
                             onPressed: () async {
                               Navigator.pop(context);
@@ -304,7 +346,9 @@ class MyHomeState extends State<MyHome> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
           ),
           child: Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Column(
               children: [
                 const SizedBox(height: 10),
@@ -312,14 +356,21 @@ class MyHomeState extends State<MyHome> {
                 Container(
                   width: 50,
                   height: 5,
-                  decoration: BoxDecoration(color: Colors.brown[300], borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(
+                    color: Colors.brown[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
 
                 const SizedBox(height: 10),
 
                 const Text(
                   "Comments",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.brown),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.brown,
+                  ),
                 ),
 
                 const SizedBox(height: 10),
@@ -329,11 +380,14 @@ class MyHomeState extends State<MyHome> {
                   child: StreamBuilder(
                     stream: _database.child('vents/$postId/comments').onValue,
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
+                      if (!snapshot.hasData ||
+                          snapshot.data!.snapshot.value == null) {
                         return const Center(child: Text("No comments yet"));
                       }
 
-                      final data = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+                      final data =
+                          snapshot.data!.snapshot.value
+                              as Map<dynamic, dynamic>;
 
                       final commentEntries = data.entries.toList();
 
@@ -341,19 +395,27 @@ class MyHomeState extends State<MyHome> {
                         itemCount: commentEntries.length,
                         itemBuilder: (context, index) {
                           final key = commentEntries[index].key;
-                          final comment = Map<String, dynamic>.from(commentEntries[index].value);
+                          final comment = Map<String, dynamic>.from(
+                            commentEntries[index].value,
+                          );
 
-                          final isMyComment = comment['uid'] == _auth.currentUser?.uid;
+                          final isMyComment =
+                              comment['uid'] == _auth.currentUser?.uid;
 
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeIn,
                             child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
 
                               title: Text(
                                 comment['nickname'] ?? "Anonymous",
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.brown,
+                                ),
                               ),
 
                               subtitle: Column(
@@ -363,7 +425,10 @@ class MyHomeState extends State<MyHome> {
                                   const SizedBox(height: 4),
                                   Text(
                                     _formatCommentTime(comment['time'] ?? ''),
-                                    style: const TextStyle(fontSize: 11, color: Colors.brown),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.brown,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -371,9 +436,17 @@ class MyHomeState extends State<MyHome> {
                               trailing:
                                   isMyComment
                                       ? IconButton(
-                                        icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                        icon: const Icon(
+                                          Icons.delete_outline,
+                                          color: Colors.red,
+                                          size: 20,
+                                        ),
                                         onPressed: () async {
-                                          await _database.child('vents/$postId/comments/$key').remove();
+                                          await _database
+                                              .child(
+                                                'vents/$postId/comments/$key',
+                                              )
+                                              .remove();
                                         },
                                       )
                                       : null,
@@ -387,17 +460,25 @@ class MyHomeState extends State<MyHome> {
 
                 /// INPUT FIELD
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border(top: BorderSide(color: Colors.brown.shade200)),
+                    border: Border(
+                      top: BorderSide(color: Colors.brown.shade200),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: commentController,
-                          decoration: const InputDecoration(hintText: "Write a comment...", border: InputBorder.none),
+                          decoration: const InputDecoration(
+                            hintText: "Write a comment...",
+                            border: InputBorder.none,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -409,10 +490,14 @@ class MyHomeState extends State<MyHome> {
                           if (user == null || text.isEmpty) return;
 
                           // AI moderation check for comment
-                          final result = await AiModerationService.checkText(text);
+                          final result = await AiModerationService.checkText(
+                            text,
+                          );
 
                           if (result["decision"] == "block") {
-                            _showBlockedDialog("This message may harm others' mental well-being. Please rephrase.");
+                            _showBlockedDialog(
+                              "This message may harm others' mental well-being. Please rephrase.",
+                            );
                             return;
                           }
 
@@ -424,12 +509,15 @@ class MyHomeState extends State<MyHome> {
                             return;
                           }
 
-                          await _database.child('vents/$postId/comments').push().set({
-                            'uid': user.uid,
-                            'nickname': _nickname,
-                            'text': commentController.text.trim(),
-                            'time': DateTime.now().toIso8601String(),
-                          });
+                          await _database
+                              .child('vents/$postId/comments')
+                              .push()
+                              .set({
+                                'uid': user.uid,
+                                'nickname': _nickname,
+                                'text': commentController.text.trim(),
+                                'time': DateTime.now().toIso8601String(),
+                              });
 
                           commentController.clear();
                         },
@@ -450,7 +538,10 @@ class MyHomeState extends State<MyHome> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5DC),
       appBar: AppBar(
-        title: const Text('Souled Space', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+        title: const Text(
+          'Souled Space',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+        ),
         centerTitle: true,
         backgroundColor: Colors.brown,
         foregroundColor: const Color(0xFFF5F5DC),
@@ -478,13 +569,20 @@ class MyHomeState extends State<MyHome> {
             ),
 
             IconButton(
-              icon: Icon(Icons.thermostat, size: 30, color: _selectedIndex == 1 ? Colors.brown : Colors.grey),
+              icon: Icon(
+                Icons.thermostat,
+                size: 30,
+                color: _selectedIndex == 1 ? Colors.brown : Colors.grey,
+              ),
               onPressed: () {
                 final currentData = SocialSyncHandler().syncNotifier.value;
                 Navigator.pushNamed(
                   context,
                   'stress_thermometer',
-                  arguments: {'level': currentData['level'], 'time': currentData['time']},
+                  arguments: {
+                    'level': currentData['level'],
+                    'time': currentData['time'],
+                  },
                 );
               },
             ),
@@ -505,7 +603,11 @@ class MyHomeState extends State<MyHome> {
 
             // Right Side Icons
             IconButton(
-              icon: Icon(Icons.group_rounded, size: 30, color: _selectedIndex == 3 ? Colors.brown : Colors.grey),
+              icon: Icon(
+                Icons.group_rounded,
+                size: 30,
+                color: _selectedIndex == 3 ? Colors.brown : Colors.grey,
+              ),
               onPressed: () {
                 Navigator.pushNamed(context, 'group');
                 _onItemTapped(3);
@@ -513,7 +615,11 @@ class MyHomeState extends State<MyHome> {
             ),
 
             IconButton(
-              icon: Icon(Icons.person_rounded, size: 30, color: _selectedIndex == 4 ? Colors.brown : Colors.grey),
+              icon: Icon(
+                Icons.person_rounded,
+                size: 30,
+                color: _selectedIndex == 4 ? Colors.brown : Colors.grey,
+              ),
               onPressed: () {
                 Navigator.pushNamed(context, 'profile');
                 _onItemTapped(4);
@@ -543,7 +649,11 @@ class MyHomeState extends State<MyHome> {
                       ? const Center(
                         child: Text(
                           'No posts yet. Let it out!',
-                          style: TextStyle(color: Colors.brown, fontSize: 18, fontStyle: FontStyle.italic),
+                          style: TextStyle(
+                            color: Colors.brown,
+                            fontSize: 18,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       )
                       : ListView.builder(
@@ -552,18 +662,31 @@ class MyHomeState extends State<MyHome> {
                         itemBuilder: (context, index) {
                           final vent = _ventList[index];
                           final isMe = vent['uid'] == _auth.currentUser?.uid;
-                          final commentCount = (vent['comments'] as Map?)?.length ?? 0;
+                          final commentCount =
+                              (vent['comments'] as Map?)?.length ?? 0;
 
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 6),
                             alignment: Alignment.center,
                             child: ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.92),
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.92,
+                              ),
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: isMe ? const Color(0xFFF5F5DC) : Colors.brown[400],
-                                  border: isMe ? Border.all(color: Colors.brown, width: 1.5) : null,
+                                  color:
+                                      isMe
+                                          ? const Color(0xFFF5F5DC)
+                                          : Colors.brown[400],
+                                  border:
+                                      isMe
+                                          ? Border.all(
+                                            color: Colors.brown,
+                                            width: 1.5,
+                                          )
+                                          : null,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Column(
@@ -572,7 +695,10 @@ class MyHomeState extends State<MyHome> {
                                     Text(
                                       vent['nickname'],
                                       style: TextStyle(
-                                        color: isMe ? Colors.brown : const Color(0xFFF5F5DC),
+                                        color:
+                                            isMe
+                                                ? Colors.brown
+                                                : const Color(0xFFF5F5DC),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
                                       ),
@@ -581,7 +707,10 @@ class MyHomeState extends State<MyHome> {
                                     Text(
                                       vent['text'],
                                       style: TextStyle(
-                                        color: isMe ? Colors.brown : const Color(0xFFF5F5DC),
+                                        color:
+                                            isMe
+                                                ? Colors.brown
+                                                : const Color(0xFFF5F5DC),
                                         fontSize: 16,
                                       ),
                                     ),
@@ -593,34 +722,54 @@ class MyHomeState extends State<MyHome> {
                                       children: [
                                         Builder(
                                           builder: (_) {
-                                            final likes = Map<String, dynamic>.from(vent['likes'] ?? {});
-                                            final userId = _auth.currentUser?.uid;
-                                            final isLiked = likes.containsKey(userId);
+                                            final likes =
+                                                Map<String, dynamic>.from(
+                                                  vent['likes'] ?? {},
+                                                );
+                                            final userId =
+                                                _auth.currentUser?.uid;
+                                            final isLiked = likes.containsKey(
+                                              userId,
+                                            );
                                             final likeCount = likes.length;
 
                                             return Row(
                                               children: [
                                                 IconButton(
                                                   padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
+                                                  constraints:
+                                                      const BoxConstraints(),
                                                   icon: Icon(
-                                                    isLiked ? Icons.favorite : Icons.favorite_border,
+                                                    isLiked
+                                                        ? Icons.favorite
+                                                        : Icons.favorite_border,
                                                     color:
                                                         isLiked
                                                             ? Colors.red
                                                             : isMe
                                                             ? Colors.brown
-                                                            : const Color(0xFFF5F5DC),
+                                                            : const Color(
+                                                              0xFFF5F5DC,
+                                                            ),
                                                     size: 22,
                                                   ),
-                                                  onPressed: () => _toggleLike(vent['id'], likes),
+                                                  onPressed:
+                                                      () => _toggleLike(
+                                                        vent['id'],
+                                                        likes,
+                                                      ),
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   likeCount.toString(),
                                                   style: TextStyle(
                                                     fontSize: 13,
-                                                    color: isMe ? Colors.brown : const Color(0xFFF5F5DC),
+                                                    color:
+                                                        isMe
+                                                            ? Colors.brown
+                                                            : const Color(
+                                                              0xFFF5F5DC,
+                                                            ),
                                                   ),
                                                 ),
                                               ],
@@ -634,11 +783,17 @@ class MyHomeState extends State<MyHome> {
                                           children: [
                                             IconButton(
                                               padding: EdgeInsets.zero,
-                                              constraints: const BoxConstraints(),
+                                              constraints:
+                                                  const BoxConstraints(),
                                               icon: Icon(
                                                 Icons.chat_bubble_outline,
                                                 size: 20,
-                                                color: isMe ? Colors.brown : const Color(0xFFF5F5DC),
+                                                color:
+                                                    isMe
+                                                        ? Colors.brown
+                                                        : const Color(
+                                                          0xFFF5F5DC,
+                                                        ),
                                               ),
                                               onPressed: () {
                                                 _showCommentsPopup(vent['id']);
@@ -649,7 +804,12 @@ class MyHomeState extends State<MyHome> {
                                               commentCount.toString(),
                                               style: TextStyle(
                                                 fontSize: 13,
-                                                color: isMe ? Colors.brown : const Color(0xFFF5F5DC),
+                                                color:
+                                                    isMe
+                                                        ? Colors.brown
+                                                        : const Color(
+                                                          0xFFF5F5DC,
+                                                        ),
                                               ),
                                             ),
                                           ],
@@ -664,7 +824,10 @@ class MyHomeState extends State<MyHome> {
                                       _formatTime(vent['time']),
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: isMe ? Colors.brown : const Color(0xFFF5F5DC),
+                                        color:
+                                            isMe
+                                                ? Colors.brown
+                                                : const Color(0xFFF5F5DC),
                                       ),
                                     ),
                                   ],

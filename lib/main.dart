@@ -13,8 +13,10 @@ import 'package:souled_space_application/individual/breathing_meditation.dart';
 import 'package:souled_space_application/individual/cbt_reflection.dart';
 import 'package:souled_space_application/individual/profile.dart';
 import 'package:souled_space_application/individual/chatbot.dart';
+import 'package:souled_space_application/splash_screen.dart';
 
-final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,8 +34,9 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       scaffoldMessengerKey: scaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
-      initialRoute: 'register',
+      initialRoute: 'splash',
       routes: {
+        'splash': (context) => const SplashScreen(),
         'login': (context) => const MyLogin(),
         'register': (context) => const MyRegister(),
         'home': (context) => const MyHome(),
