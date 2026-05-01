@@ -546,86 +546,88 @@ class MyHomeState extends State<MyHome> {
         backgroundColor: Colors.brown,
         foregroundColor: const Color(0xFFF5F5DC),
       ),
-      bottomNavigationBar: Container(
-        height: 65,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F5DC),
-          border: Border(top: BorderSide(color: Colors.brown.shade200)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Left Side Icons
-            IconButton(
-              icon: Icon(
-                Icons.psychology_alt_rounded,
-                size: 30,
-                color: _selectedIndex == 0 ? Colors.brown : Colors.grey,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, 'cbt_reflection');
-                _onItemTapped(0);
-              },
-            ),
-
-            IconButton(
-              icon: Icon(
-                Icons.thermostat,
-                size: 30,
-                color: _selectedIndex == 1 ? Colors.brown : Colors.grey,
-              ),
-              onPressed: () {
-                final currentData = SocialSyncHandler().syncNotifier.value;
-                Navigator.pushNamed(
-                  context,
-                  'stress_thermometer',
-                  arguments: {
-                    'level': currentData['level'],
-                    'time': currentData['time'],
-                  },
-                );
-              },
-            ),
-
-            // Center + Button
-            GestureDetector(
-              onTap: _showPostPopup,
-              child: Container(
-                height: 42,
-                width: 42,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.brown, width: 2),
-                  borderRadius: BorderRadius.circular(12),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          height: 65,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F5DC),
+            border: Border(top: BorderSide(color: Colors.brown.shade200)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Left Side Icons
+              IconButton(
+                icon: Icon(
+                  Icons.psychology_alt_rounded,
+                  size: 30,
+                  color: _selectedIndex == 0 ? Colors.brown : Colors.grey,
                 ),
-                child: const Icon(Icons.add, size: 30, color: Colors.brown),
+                onPressed: () {
+                  Navigator.pushNamed(context, 'cbt_reflection');
+                  _onItemTapped(0);
+                },
               ),
-            ),
 
-            // Right Side Icons
-            IconButton(
-              icon: Icon(
-                Icons.group_rounded,
-                size: 30,
-                color: _selectedIndex == 3 ? Colors.brown : Colors.grey,
+              IconButton(
+                icon: Icon(
+                  Icons.thermostat,
+                  size: 30,
+                  color: _selectedIndex == 1 ? Colors.brown : Colors.grey,
+                ),
+                onPressed: () {
+                  final currentData = SocialSyncHandler().syncNotifier.value;
+                  Navigator.pushNamed(
+                    context,
+                    'stress_thermometer',
+                    arguments: {
+                      'level': currentData['level'],
+                      'time': currentData['time'],
+                    },
+                  );
+                },
               ),
-              onPressed: () {
-                Navigator.pushNamed(context, 'group');
-                _onItemTapped(3);
-              },
-            ),
 
-            IconButton(
-              icon: Icon(
-                Icons.person_rounded,
-                size: 30,
-                color: _selectedIndex == 4 ? Colors.brown : Colors.grey,
+              // Center + Button
+              GestureDetector(
+                onTap: _showPostPopup,
+                child: Container(
+                  height: 42,
+                  width: 42,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.brown, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.add, size: 30, color: Colors.brown),
+                ),
               ),
-              onPressed: () {
-                Navigator.pushNamed(context, 'profile');
-                _onItemTapped(4);
-              },
-            ),
-          ],
+
+              // Right Side Icons
+              IconButton(
+                icon: Icon(
+                  Icons.group_rounded,
+                  size: 30,
+                  color: _selectedIndex == 3 ? Colors.brown : Colors.grey,
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, 'group');
+                  _onItemTapped(3);
+                },
+              ),
+
+              IconButton(
+                icon: Icon(
+                  Icons.person_rounded,
+                  size: 30,
+                  color: _selectedIndex == 4 ? Colors.brown : Colors.grey,
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, 'profile');
+                  _onItemTapped(4);
+                },
+              ),
+            ],
+          ),
         ),
       ),
 
