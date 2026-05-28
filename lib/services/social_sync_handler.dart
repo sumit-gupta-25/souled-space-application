@@ -15,10 +15,10 @@ class SocialSyncHandler {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   // The ONLY state variables for the entire app's stress level
-  final ValueNotifier<Map<String, dynamic>> syncNotifier = ValueNotifier({'level': 0.0, 'time': '2000-01-01 00:00:00'});
+  //final ValueNotifier<Map<String, dynamic>> syncNotifier = ValueNotifier({'level': 0.0, 'time': '2000-01-01 00:00:00'});
+  final ValueNotifier<Map<String, dynamic>> syncNotifier = ValueNotifier({'level': 0.0});
 
   final String _currentMasterTimestamp = '2000-01-01 00:00:00';
-  // final String targetInsta = "slrtcemp2";
 
   String dbTime = "", instaTime = "";
   double dbLevel = 0.0, instaLevel = 0.0;
@@ -42,7 +42,6 @@ class SocialSyncHandler {
           instaTime = platformTime;
           dbTime = timeDb;
           _processFinalData(dbTime, instaTime);
-          //startDatabaseListener(instaTime);
         }
       }
     }

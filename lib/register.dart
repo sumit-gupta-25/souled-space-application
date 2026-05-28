@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -55,7 +57,7 @@ class MyRegisterState extends State<MyRegister> {
 
       Navigator.pushNamed(context, 'login');
     } on FirebaseAuthException catch (e) {
-      // ... existing error handling ...
+      debugPrint("Error: $e");
     } finally {
       setState(() => _isLoading = false);
     }
