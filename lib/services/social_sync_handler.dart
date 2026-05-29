@@ -15,7 +15,6 @@ class SocialSyncHandler {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   // The ONLY state variables for the entire app's stress level
-  //final ValueNotifier<Map<String, dynamic>> syncNotifier = ValueNotifier({'level': 0.0, 'time': '2000-01-01 00:00:00'});
   final ValueNotifier<Map<String, dynamic>> syncNotifier = ValueNotifier({'level': 0.0});
 
   final String _currentMasterTimestamp = '2000-01-01 00:00:00';
@@ -51,42 +50,44 @@ class SocialSyncHandler {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    // 1. First, fetch the instaId from the 'users' collection once
     _database
         .child('users')
         .child(user.uid)
         .child('instaId')
         .get()
         .then((snapshot) {
-          String? instaId;
-          if (snapshot.exists) {
-            instaId = snapshot.value as String;
-            debugPrint("Fetched instaId for sync: $instaId");
-          }
+          String? instaId = snapshot.exists ? snapshot.value as String : null;
+          debugPrint("Fetched instaId for sync: $instaId");
 
-          // 2. Now start the persistent listener for 'vents'
+          // Listen to the latest vent
           _database.child('vents').orderByChild('uid').equalTo(user.uid).limitToLast(1).onValue.listen((event) {
-            if (event.snapshot.exists) {
-              final data = event.snapshot.value as Map<dynamic, dynamic>;
+            if (event.snapshot.exists && event.snapshot.value != null) {
+              try {
+                final data = event.snapshot.value as Map<dynamic, dynamic>;
+                final latestVent = data.values.first as Map<dynamic, dynamic>;
 
-              data.forEach((key, value) {
-                final double level = (value['stress_level'] ?? 0.0).toDouble();
-                final String time = value['time'] as String;
+                // FIX: Check if it's a number first. If it's a String ("Unable to detect"), default to 0.0
+                final rawLevel = latestVent['stress_level'];
+                if (rawLevel is num) {
+                  dbLevel = rawLevel.toDouble();
+                } else {
+                  dbLevel = 0.0; // Safe fallback for text values
+                }
 
-                // Now you have both:
-                // level, time, AND instaId
+                dbTime = latestVent['time'] as String;
 
-                dbLevel = level;
-                dbTime = time;
+                debugPrint("dbLevel is: $dbLevel");
+                debugPrint("dbTime is: $dbTime");
 
-                // Pass the instaId to your social sync if needed
                 runSocialSync(dbTime, instaId);
-              });
+              } catch (e) {
+                debugPrint("Parsing error: $e");
+              }
             }
           });
         })
         .catchError((error) {
-          debugPrint("Error fetching user profile: $error");
+          debugPrint("Error: $error");
         });
   }
 
@@ -120,7 +121,7 @@ class SocialSyncHandler {
         SnackBar(
           content: const Text("Please wait while we detect your stress levels"),
           backgroundColor: Colors.brown,
-          duration: const Duration(seconds: 7),
+          duration: const Duration(seconds: 120),
         ),
       );
     });
