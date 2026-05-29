@@ -3,7 +3,7 @@ package="com.example.souled_space_application">
     <uses-permission
     android:name="android.permission.INTERNET"/>
     <application
-        android:label="souled_space_application"
+        android:label="SouledSpace"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
